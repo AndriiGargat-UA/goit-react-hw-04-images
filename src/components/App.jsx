@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { toast } from 'react-toastify';
@@ -10,62 +10,57 @@ import { Searchbar } from './Searchbar/Searchbar';
 import { MainContainer } from './App.styled';
 import { GlobalStyle } from './GlobalStyle';
 
-export class App extends Component {
-  state = {
-    images: [],
-    imageName: '',
-    page: 1,
-    error: null,
-    isLoading: false,
-  };
+export const App = () => {
+  const [images, setImages] = useState([]);
+  const [imageName, setImageName] = useState('');
+  const [page, setPage] = useState(1);
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  async componentDidUpdate(prevProps, prevState) {
-    const prevQuery = prevState.imageName;
-    const nextQuery = this.state.imageName;
+  useEffect(() => {
+    if (!imageName) {
+      return;
+    }
 
-    if (prevQuery !== nextQuery || prevState.page !== this.state.page) {
-      this.setState({ isLoading: true });
+    const fetchImages = async () => {
       try {
-        const response = await fetchImageSearch(nextQuery, this.state.page);
+        setIsLoading(true);
+        const response = await fetchImageSearch(imageName, page);
         if (response.length === 0) {
           return toast.error(
             'Sorry, there are no images matching your search query.'
           );
         } else {
-          return this.setState(({ images }) => ({
-            images: [...images, ...response],
-          }));
+          setImages(state => [...state, ...response]);
         }
       } catch (error) {
-        this.setState({ error });
+        setError(error.message);
       } finally {
-        this.setState({ isLoading: false });
+        setIsLoading(false);
       }
-    }
-  }
+    };
+    fetchImages();
+  }, [imageName, page]);
 
-  handleFormSubmit = imageName => {
-    this.setState({ imageName, images: [], page: 1 });
+  const handleFormSubmit = imageName => {
+    setImageName(imageName);
+    setImages([]);
+    setPage(1);
   };
 
-  handleLoad = () => {
-    this.setState(prev => ({ page: prev.page + 1 }));
+  const handleLoad = () => {
+    setPage(state => state + 1);
   };
 
-  render() {
-    const { isLoading, images, error } = this.state;
-    return (
-      <MainContainer>
-        <Searchbar onSubmit={this.handleFormSubmit} />
-        {images.length !== 0 && <ImageGallery images={images} />}
-        {error && <p>{error}</p>}
-        {isLoading && <Loader />}
-        {images.length > 11 && !isLoading && (
-          <LoadMore onClick={this.handleLoad} />
-        )}
-        <GlobalStyle />
-        <ToastContainer autoClose={2000} />
-      </MainContainer>
-    );
-  }
-}
+  return (
+    <MainContainer>
+      <Searchbar onSubmit={handleFormSubmit} />
+      {images.length !== 0 && <ImageGallery images={images} />}
+      {error && <p>{error}</p>}
+      {isLoading && <Loader />}
+      {images.length > 11 && !isLoading && <LoadMore onClick={handleLoad} />}
+      <GlobalStyle />
+      <ToastContainer autoClose={2000} />
+    </MainContainer>
+  );
+};
