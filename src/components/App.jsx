@@ -9,6 +9,7 @@ import { LoadMore } from 'components/Button/Button';
 import { Searchbar } from './Searchbar/Searchbar';
 import { MainContainer } from './App.styled';
 import { GlobalStyle } from './GlobalStyle';
+import { nanoid } from 'nanoid';
 
 export const App = () => {
   const [images, setImages] = useState([]);
@@ -16,6 +17,8 @@ export const App = () => {
   const [page, setPage] = useState(1);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [requestId, setRequestId] = useState(''); 
+
 
   useEffect(() => {
     if (!imageName) {
@@ -40,12 +43,13 @@ export const App = () => {
       }
     };
     fetchImages();
-  }, [imageName, page]);
+  }, [imageName, page, requestId]);
 
   const handleFormSubmit = imageName => {
     setImageName(imageName);
     setImages([]);
     setPage(1);
+    setRequestId(nanoid());
   };
 
   const handleLoad = () => {
